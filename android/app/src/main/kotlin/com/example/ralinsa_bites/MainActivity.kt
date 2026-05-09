@@ -1,0 +1,5 @@
+package com.example.ralinsa_bites
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
