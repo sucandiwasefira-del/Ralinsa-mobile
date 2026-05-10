@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -10,40 +9,40 @@ void main() {
 }
 
 // --- 1. API SERVICE ---
+// PERBAIKAN UTAMA: Menggunakan GET request dengan query parameters.
+// Alasan: HTTP POST ke Google Apps Script diblokir browser (CORS) saat
+// berjalan sebagai Flutter Web. GET request tidak memiliki masalah CORS
+// karena GAS sudah mengizinkannya secara default. Solusi ini bekerja
+// di semua platform: Android, iOS, dan Web.
 class ApiService {
-  static const String url = "https://script.google.com/macros/s/AKfycbxuUXL42lMh4LF_-50x5Q7ffayzHN0bCghWRbEqqlfy8vC39Ky4sjjVMq-P3CtUTBF-/exec";
+  static const String _gasUrl =
+      "https://script.google.com/macros/s/AKfycbxuUXL42lMh4LF_-50x5Q7ffayzHN0bCghWRbEqqlfy8vC39Ky4sjjVMq-P3CtUTBF-/exec";
 
   static Future<bool> kirimPesanan(Map<String, dynamic> data) async {
     try {
-      // 1. Kirim Request Pertama
-      var response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
+      // Encode semua data sebagai query parameters di URL (GET request).
+      // Ini menghindari CORS preflight yang memblokir POST di Flutter Web.
+      final uri = Uri.parse(_gasUrl).replace(queryParameters: {
+        'nama': data['nama']?.toString() ?? '',
+        'meja': data['meja']?.toString() ?? '',
+        'total': data['total']?.toString() ?? '',
+        'metode': data['metode']?.toString() ?? '',
+        'tgl': data['tgl']?.toString() ?? '',
+        'menu': data['menu']?.toString() ?? '',
+        'status': data['status']?.toString() ?? '',
+      });
 
-      // 2. Jika Google memberikan status 302 (Redirect)
-      if (response.statusCode == 302) {
-        String? redirectedUrl = response.headers['location'];
-        if (redirectedUrl != null) {
-          // Kirim ulang ke URL pengalihan
-          response = await http.post(
-            Uri.parse(redirectedUrl),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(data),
-          );
-        }
-      }
+      // GET request diizinkan lintas-origin oleh Google Apps Script.
+      final response = await http.get(uri);
 
-      // 3. Cek apakah hasil akhirnya sukses (200)
       if (response.statusCode == 200) {
         return true;
       } else {
-        print("Gagal. Status: ${response.statusCode}, Body: ${response.body}");
+        debugPrint('Gagal. Status: ${response.statusCode}, Body: ${response.body}');
         return false;
       }
     } catch (e) {
-      print("Koneksi Error: $e");
+      debugPrint('Koneksi Error: $e');
       return false;
     }
   }
@@ -178,7 +177,7 @@ class DashboardPage extends StatelessWidget {
     return Stack(
       children: [
         Container(width: double.infinity, height: double.infinity, decoration: const BoxDecoration(image: DecorationImage(image: NetworkImage("https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=800"), fit: BoxFit.cover))),
-        Container(width: double.infinity, height: double.infinity, color: Colors.black.withOpacity(0.5)),
+        Container(width: double.infinity, height: double.infinity, color: Colors.black.withValues(alpha: 0.5)),
         Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           const Icon(Icons.bakery_dining, size: 80, color: Color(0xFFD4AF37)),
           const Text("Ralinsa Bites", style: TextStyle(color: Color(0xFFD4AF37), fontSize: 42, fontWeight: FontWeight.bold)),
@@ -311,7 +310,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         const Text("Booking untuk Nanti?", style: TextStyle(fontWeight: FontWeight.bold)),
                         Switch(
                           value: isBooking,
-                          activeColor: const Color(0xFFD4AF37),
+                          activeThumbColor: const Color(0xFFD4AF37),
+                          activeTrackColor: const Color(0xFFD4AF37).withValues(alpha: 0.5),
                           onChanged: (v) => setState(() => isBooking = v),
                         ),
                       ],
@@ -388,7 +388,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   const SizedBox(height: 15),
 
                   DropdownButtonFormField<String>(
-                    value: metode,
+                    initialValue: metode,
                     hint: const Text("Metode Bayar"),
                     items: ['QRIS', 'Transfer Bank', 'Tunai'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                     onChanged: (v) => setState(() => metode = v),
@@ -410,33 +410,37 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       foregroundColor: const Color(0xFFD4AF37),
                     ),
                     onPressed: (metode == null || _nama.text.isEmpty || selectedMeja == null) ? null : () async {
+                      // Ambil referensi context-dependent objects SEBELUM await apapun
+                      final nav = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
+
                       setState(() => loading = true);
                       final now = DateTime.now();
-                      final tglFormatted = "${now.day}-${now.month}-${now.year} ${now.hour}:${now.minute}";
-                      String daftarMenu = widget.items.map((item) => "${item['qty']}x ${item['nama']}").join(", ");
+                      final tglFormatted = '${now.day}-${now.month}-${now.year} ${now.hour}:${now.minute}';
+                      final daftarMenu = widget.items.map((item) => '${item["qty"]}x ${item["nama"]}').join(', ');
 
                       final data = {
-                        "nama": _nama.text,
-                        "meja": selectedMeja.toString(),
-                        "total": isBooking ? total + 5000 : total,
-                        "metode": metode,
-                        "tgl": tglFormatted,
-                        "menu": daftarMenu,
-                        "status": isBooking ? "BOOKING" : "MAKAN DI TEMPAT", 
-                        "items": widget.items
+                        'nama': _nama.text,
+                        'meja': selectedMeja.toString(),
+                        'total': isBooking ? total + 5000 : total,
+                        'metode': metode,
+                        'tgl': tglFormatted,
+                        'menu': daftarMenu,
+                        'status': isBooking ? 'BOOKING' : 'MAKAN DI TEMPAT',
+                        'items': widget.items,
                       };
 
-                      bool sukses = await ApiService.kirimPesanan(data); // Integrasi ApiService
+                      final sukses = await ApiService.kirimPesanan(data);
 
                       if (!mounted) return;
                       setState(() => loading = false);
 
                       if (sukses) {
                         await _showSuccessDialog();
-                        Navigator.pop(context, data);
-                        Navigator.push(context, MaterialPageRoute(builder: (c) => StrukPage(data: data)));
+                        nav.pop(data);
+                        nav.push(MaterialPageRoute(builder: (c) => StrukPage(data: data)));
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal mengirim pesanan.")));
+                        messenger.showSnackBar(const SnackBar(content: Text('Gagal mengirim pesanan. Periksa koneksi internet.')));
                       }
                     },
                     child: Text(isBooking ? "BOOKING SEKARANG" : "PROSES PESANAN SEKARANG", style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -513,11 +517,11 @@ class StrukPage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("${item['nama']} x${item['qty']}", style: const TextStyle(fontSize: 13)),
-                    Text("Rp ${item['harga'] * item['qty']}", style: const TextStyle(fontSize: 13)),
+                    Text('${item["nama"]} x${item["qty"]}', style: const TextStyle(fontSize: 13)),
+                    Text('Rp ${item["harga"] * item["qty"]}', style: const TextStyle(fontSize: 13)),
                   ],
                 ),
-              )).toList(),
+              )),
               // ----------------------------------------
 
               const Divider(),
