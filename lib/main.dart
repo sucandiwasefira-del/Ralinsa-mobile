@@ -16,7 +16,7 @@ void main() {
 // di semua platform: Android, iOS, dan Web.
 class ApiService {
   static const String _gasUrl =
-      "https://script.google.com/macros/s/AKfycbxuUXL42lMh4LF_-50x5Q7ffayzHN0bCghWRbEqqlfy8vC39Ky4sjjVMq-P3CtUTBF-/exec";
+      "https://script.google.com/macros/s/AKfycbxZRRB0JAKUMm3EQLryK6mYNNj_poXy1nFeFbfXQ-y_rqRjATBMa4ttYYeSxUmSpCPl/exec";
 
   static Future<bool> kirimPesanan(Map<String, dynamic> data) async {
     try {
