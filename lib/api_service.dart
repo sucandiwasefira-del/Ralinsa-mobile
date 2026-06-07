@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // URL Web App Google Apps Script Ralinsa Bites
-  static const String _gasUrl = "https://script.google.com/macros/s/AKfycbwqG774Xby02PWQ0-4CsqCfPvGTULWs3r1awg5iGSfbCfNOzqpLTVNjV8eNwuxQYrzMag/exec";
+  static const String _gasUrl = "https://script.google.com/macros/s/AKfycbxtAoCjiJvvqmPbdVackaj08i0KaDcJD3UOkUMchAgvIw7yJtLBBGBBy6CBUgCocJtQ_w/exec";
   // =======================================================
   // 1. FUNGSI LOGIN
   // =======================================================

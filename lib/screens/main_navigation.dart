@@ -68,7 +68,8 @@ class _MainNavigationState extends State<MainNavigation> {
         children: [
           DashboardPage(onStartOrder: () => setState(() => _currentIndex = 1)),
           MenuKategoriPage(semuaMenu: semuaMenu, keranjang: keranjang, onUpdate: updateQty, mejaTerisi: mejaTerisi),
-          RiwayatPage(riwayat: riwayatPesanan),
+          // Ubah bagian yang error di main_navigation.dart menjadi:
+          RiwayatPage(username: "NamaUserYangLogin"),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

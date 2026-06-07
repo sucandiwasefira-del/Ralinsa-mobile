@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-//  Pastikan path import LoginPage ini sudah sesuai dengan proyekmu
-import 'login_page.dart'; 
+import 'login_page.dart'; // Sesuaikan dengan lokasi file login_page.dart kamu
 
 class StrukPage extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -12,36 +11,52 @@ class StrukPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Struk"), 
-        backgroundColor: const Color(0xFF3E2723), 
+        title: const Text("Struk"),
+        backgroundColor: const Color(0xFF3E2723),
         foregroundColor: const Color(0xFFD4AF37),
         actions: [
-          // OPTASI 1: Tombol Logout Instan di Pojok Kanan Atas AppBar
+          // TOMBOL LOGOUT SEKARANG DI POJOK KANAN ATAS (SESUAI LINGKARAN)
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: "Logout Testing Admin",
+            tooltip: "Logout Admin",
             onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-                (route) => false,
+              // Dialog konfirmasi supaya tidak salah klik
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Logout"),
+                  content: const Text("Apakah Anda yakin ingin keluar?"),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                          (route) => false,
+                        );
+                      },
+                      child: const Text("Ya, Logout", style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
               );
             },
           ),
         ],
       ),
       body: Center(
-        child: SingleChildScrollView( 
+        child: SingleChildScrollView(
           child: Container(
-            width: 340, 
-            margin: const EdgeInsets.all(20), 
+            width: 340,
+            margin: const EdgeInsets.all(20),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white, 
+              color: Colors.white,
               border: Border.all(color: Colors.brown, width: 2),
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min, 
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Text("RALINSA BITES", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
                 const Text("Manisnya tak terlupakan", style: TextStyle(fontSize: 12)),
@@ -51,7 +66,6 @@ class StrukPage extends StatelessWidget {
                 _row("Meja", data['meja']),
                 _row("Metode", data['metode']),
                 const Divider(),
-                
                 const Align(alignment: Alignment.centerLeft, child: Text("Pesanan:", style: TextStyle(fontWeight: FontWeight.bold))),
                 const SizedBox(height: 5),
                 ...items.map((item) => Padding(
@@ -64,32 +78,14 @@ class StrukPage extends StatelessWidget {
                     ],
                   ),
                 )),
-
                 const Divider(),
                 _row("TOTAL", "Rp ${data['total']}", b: true),
                 const SizedBox(height: 30),
                 
-                // Tombol Bawaan: Kembali ke Menu Utama
+                // TOMBOL DI DALAM KERTAS HANYA "KEMBALI KE MENU" SAJA
                 TextButton(
-                  onPressed: () => Navigator.pop(context), 
+                  onPressed: () => Navigator.pop(context),
                   child: const Text("KEMBALI KE MENU", style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
-                ),
-                
-                const SizedBox(height: 5),
-                const Divider(color: Colors.grey, thickness: 0.5),
-                const SizedBox(height: 5),
-
-                // OPTASI 2: Tombol Logout Merah di Bagian Bawah Struk (Khusus Testing)
-                TextButton.icon(
-                  icon: const Icon(Icons.logout, size: 16, color: Colors.red),
-                  label: const Text("LOGOUT (ADMIN)", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13)),
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
-                      (route) => false,
-                    );
-                  },
                 ),
               ],
             ),
@@ -100,9 +96,9 @@ class StrukPage extends StatelessWidget {
   }
 
   Widget _row(String l, String r, {bool b = false}) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Text(l), 
+      Text(l),
       Text(r, style: TextStyle(fontWeight: b ? FontWeight.bold : FontWeight.normal)),
     ],
   );
