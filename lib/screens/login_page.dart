@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (c) => const MainNavigation()),
+          MaterialPageRoute(builder: (c) => MainNavigation(username: _usernameController.text.trim())),
         );
       }
     } else {

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import '../api_service.dart';
 import 'dashboard_page.dart';
 import 'menu_kategori_page.dart';
 import 'riwayat_page.dart';
 import 'checkout_page.dart';
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  final String username;
+  const MainNavigation({super.key, required this.username});
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
@@ -15,6 +17,30 @@ class _MainNavigationState extends State<MainNavigation> {
   Map<String, Map<String, dynamic>> keranjang = {};
   List<Map<String, dynamic>> riwayatPesanan = []; 
   List<int> mejaTerisi = [];
+  bool _isRiwayatLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRiwayat();
+  }
+
+  Future<void> _loadRiwayat() async {
+    setState(() => _isRiwayatLoading = true);
+    try {
+      final list = await ApiService.ambilRiwayatUser(widget.username);
+      if (mounted) {
+        setState(() {
+          riwayatPesanan = list;
+          _isRiwayatLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isRiwayatLoading = false);
+      }
+    }
+  }
 
   final List<Map<String, dynamic>> semuaMenu = [
     {'nama': 'Nastar Premium', 'harga': 85000, 'deskripsi': 'Dibuat dengan butter Wisjman melimpah dan selai nanas asli yang asam manis segar.', 'kategori': 'kering', 'img': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcxIEAEBcBb9fuMTvkXFjxbLAI6Mn8e1Jysg&s'},
@@ -68,7 +94,11 @@ class _MainNavigationState extends State<MainNavigation> {
         children: [
           DashboardPage(onStartOrder: () => setState(() => _currentIndex = 1)),
           MenuKategoriPage(semuaMenu: semuaMenu, keranjang: keranjang, onUpdate: updateQty, mejaTerisi: mejaTerisi),
-          RiwayatPage(riwayat: riwayatPesanan),
+          RiwayatPage(
+            riwayat: riwayatPesanan,
+            isLoading: _isRiwayatLoading,
+            onRefresh: _loadRiwayat,
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -86,7 +116,16 @@ class _MainNavigationState extends State<MainNavigation> {
         backgroundColor: const Color(0xFFD4AF37), 
         foregroundColor: Colors.black, 
         onPressed: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (c) => CheckoutPage(items: keranjang.values.toList(), mejaTerisi: mejaTerisi)));
+          final res = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (c) => CheckoutPage(
+                items: keranjang.values.toList(),
+                mejaTerisi: mejaTerisi,
+                username: widget.username,
+              ),
+            ),
+          );
           if (res != null) {
             setState(() { 
               riwayatPesanan.insert(0, res); 
@@ -94,6 +133,7 @@ class _MainNavigationState extends State<MainNavigation> {
               int noMeja = int.parse(res['meja']);
               if (!mejaTerisi.contains(noMeja)) mejaTerisi.add(noMeja);
             });
+            _loadRiwayat();
           }
         },
         label: Text("${keranjang.length} Item", style: const TextStyle(fontWeight: FontWeight.bold)), 

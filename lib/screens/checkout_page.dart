@@ -5,7 +5,8 @@ import 'struk_page.dart';
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> items;
   final List<int> mejaTerisi;
-  const CheckoutPage({super.key, required this.items, required this.mejaTerisi});
+  final String username;
+  const CheckoutPage({super.key, required this.items, required this.mejaTerisi, required this.username});
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
@@ -158,6 +159,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       final daftarMenu = widget.items.map((item) => '${item["qty"]}x ${item["nama"]}').join(', ');
 
                       final data = {
+                        'username': widget.username,
                         'nama': _nama.text,
                         'meja': selectedMeja.toString(),
                         'total': isBooking ? total + 5000 : total,

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // URL Web App Google Apps Script Ralinsa Bites
-  static const String _gasUrl = "https://script.google.com/macros/s/AKfycbwqG774Xby02PWQ0-4CsqCfPvGTULWs3r1awg5iGSfbCfNOzqpLTVNjV8eNwuxQYrzMag/exec";
+  static const String _gasUrl = "https://script.google.com/macros/s/AKfycbwCloPxQmrpHdMHwHGgG-qej7rPUFxM4ay81FRD8JD93hSTnXyabTKUtsyGRhX_AiSO/exec";
   // =======================================================
   // 1. FUNGSI LOGIN
   // =======================================================
@@ -58,6 +58,7 @@ class ApiService {
   static Future<bool> kirimPesanan(Map<String, dynamic> data) async {
     try {
       final uri = Uri.parse(_gasUrl).replace(queryParameters: {
+        'username': data['username']?.toString() ?? '',
         'nama': data['nama']?.toString() ?? '',
         'meja': data['meja']?.toString() ?? '',
         'total': data['total']?.toString() ?? '',
@@ -81,6 +82,32 @@ class ApiService {
       return false;
     }
   }
+
+  // =======================================================
+  // 3b. FUNGSI AMBIL RIWAYAT PESANAN PER USER
+  // =======================================================
+  static Future<List<Map<String, dynamic>>> ambilRiwayatUser(String username) async {
+    try {
+      final uri = Uri.parse(_gasUrl).replace(queryParameters: {
+        'action': 'ambil_riwayat_user',
+        'username': username,
+      });
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final resData = json.decode(response.body);
+        if (resData['data'] != null) {
+          return List<Map<String, dynamic>>.from(resData['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error ambil riwayat: $e');
+      return [];
+    }
+  }
+
 
   // =======================================================
   // 4. FUNGSI AMBIL DATA HARIAN + RIWAYAT PESANAN
