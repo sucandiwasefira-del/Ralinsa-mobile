@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart'; // Sesuaikan dengan nama file halaman login kamu
 
 class StrukPage extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -8,7 +9,45 @@ class StrukPage extends StatelessWidget {
     List items = data['items'] ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Struk"), backgroundColor: const Color(0xFF3E2723), foregroundColor: const Color(0xFFD4AF37)),
+      appBar: AppBar(
+        title: const Text("Struk"), 
+        backgroundColor: const Color(0xFF3E2723), 
+        foregroundColor: const Color(0xFFD4AF37),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Color(0xFFD4AF37)),
+            onPressed: () {
+              // Menampilkan dialog konfirmasi sesuai kalimat permintaanmu
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("Logout"),
+                    content: const Text("Apakah anda ingin kluar dari aplikasi toko ralinsa?"),
+                    actions: [
+                      TextButton(
+                        child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      TextButton(
+                        child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginPage()), // Sesuaikan nama class login kamu
+                            (route) => false,
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: Center(
         child: SingleChildScrollView( 
           child: Container(
