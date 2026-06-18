@@ -155,14 +155,35 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  // Helper untuk membuat Summary Card pada PDF
+  pw.Widget _pdfSummaryCard(String label, String value) {
+    return pw.Container(
+      width: 160,
+      padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: pw.BoxDecoration(
+        color: PdfColor.fromInt(0xFFFBF8F5),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+        border: pw.Border.all(color: PdfColor.fromInt(0xFFEFEBE9), width: 0.8),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 4),
+          pw.Text(value, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF3E2723))),
+        ],
+      ),
+    );
+  }
+
   // 1. FUNGSI CETAK LAPORAN BERDASARKAN FILTER YANG AKTIF
   Future<void> _cetakLaporanPDF() async {
     try {
       final pdf = pw.Document();
 
-      final gayaHeader = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.white);
+      final gayaHeader = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9, color: PdfColors.white);
       final gayaData = pw.TextStyle(fontSize: 9, color: PdfColors.black);
-      final gayaTotal = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.black);
+      final gayaTotal = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9, color: PdfColors.black);
 
       List<dynamic> dataLaporanAktif = _riwayatPesanan; 
       double totalPendapatanAktif = _totalPendapatan;
@@ -175,36 +196,87 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             marginLeft: 25,
             marginRight: 25,
           ),
+          header: (pw.Context context) {
+            return pw.Column(
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("RALINSA BITES", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF3E2723))),
+                        pw.Text("Manisnya Tak Terlupakan", style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic, color: PdfColors.grey600)),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text("LAPORAN PENJUALAN", style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFFD4AF37))),
+                        pw.Text("Periode: $_tipeFilter", style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF3E2723))),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 6),
+                pw.Divider(thickness: 1, color: PdfColor.fromInt(0xFF3E2723)),
+                pw.SizedBox(height: 12),
+              ],
+            );
+          },
+          footer: (pw.Context context) {
+            return pw.Container(
+              alignment: pw.Alignment.centerRight,
+              margin: const pw.EdgeInsets.only(top: 15),
+              padding: const pw.EdgeInsets.only(top: 5),
+              decoration: pw.BoxDecoration(
+                border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    "Dicetak otomatis melalui Sistem Manajemen Keuangan Admin Ralinsa Bites", 
+                    style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500)
+                  ),
+                  pw.Text(
+                    "Halaman ${context.pageNumber} dari ${context.pagesCount}",
+                    style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
+                  ),
+                ],
+              ),
+            );
+          },
           build: (pw.Context context) {
             return [
-              pw.Center(
-                child: pw.Text("LAPORAN RINCIAN PENJUALAN TOKO RALINSA BITES", 
-                    style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              // Summary Cards Row
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  _pdfSummaryCard("Total Omset", "Rp ${totalPendapatanAktif.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}"),
+                  _pdfSummaryCard("Jumlah Transaksi", "${dataLaporanAktif.length} Transaksi"),
+                  _pdfSummaryCard("Waktu Cetak", DateTime.now().toLocal().toString().substring(0, 16)),
+                ],
               ),
-              pw.Center(child: pw.Text("Manisnya Tak Terlupakan", style: const pw.TextStyle(fontSize: 10))),
-              pw.SizedBox(height: 5),
-              pw.Center(child: pw.Text("Periode Laporan: $_tipeFilter", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold))),
-              pw.SizedBox(height: 10),
-              pw.Divider(thickness: 1, color: PdfColors.grey400),
               pw.SizedBox(height: 15),
               
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
                 columnWidths: {
-                  0: const pw.FixedColumnWidth(25),
-                  1: const pw.FixedColumnWidth(60),
-                  2: const pw.FixedColumnWidth(80),
-                  3: const pw.FixedColumnWidth(130),
-                  4: const pw.FixedColumnWidth(30),
-                  5: const pw.FixedColumnWidth(60),
-                  6: const pw.FixedColumnWidth(85),
+                  0: const pw.FixedColumnWidth(25),  // No
+                  1: const pw.FixedColumnWidth(95),  // Tanggal
+                  2: const pw.FixedColumnWidth(85),  // Pelanggan
+                  3: const pw.FixedColumnWidth(150), // Menu
+                  4: const pw.FixedColumnWidth(30),  // Qty
+                  5: const pw.FixedColumnWidth(65),  // Metode
+                  6: const pw.FixedColumnWidth(95),  // Total
                 },
                 children: [
                   pw.TableRow(
                     decoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFF3E2723)),
                     children: [
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text("No", style: gayaHeader))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Hari/Tgl", style: gayaHeader)),
+                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Tanggal", style: gayaHeader)),
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Pelanggan", style: gayaHeader)),
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Menu Dipesan", style: gayaHeader)),
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text("Qty", style: gayaHeader))),
@@ -230,12 +302,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       double totalHarga = double.tryParse(item['total'].toString()) ?? 0.0;
                       String formattedTotal = "Rp ${totalHarga.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
                       
-                      final warnaBaris = index % 2 == 0 ? PdfColors.grey100 : PdfColors.white;
+                      final warnaBaris = index % 2 == 0 ? PdfColor.fromInt(0xFFF9F9F9) : PdfColors.white;
 
                       return pw.TableRow(
                         children: [
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text("${index + 1}", style: gayaData))),
-                          pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['hari'] ?? item['tanggal'] ?? "-", style: gayaData)),
+                          pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['tanggal'] ?? item['hari'] ?? "-", style: gayaData)),
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['nama'] ?? "-", style: gayaData)),
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['menu'] ?? "-", style: gayaData)),
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text(item['qty']?.toString() ?? "1", style: gayaData))),
@@ -247,18 +319,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                   pw.TableRow(
                     children: [
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
                       pw.Container(
-                        color: PdfColors.grey300,
+                        color: PdfColors.grey200,
                         padding: const pw.EdgeInsets.all(8),
                         child: pw.Text("TOTAL OMSET:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                       ),
                       pw.Container(
-                        color: PdfColors.grey300,
+                        color: PdfColors.grey200,
                         padding: const pw.EdgeInsets.all(8),
                         child: pw.Align(
                           alignment: pw.Alignment.centerRight,
@@ -272,15 +344,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ],
               ),
-              
-              pw.SizedBox(height: 40),
-              pw.Align(
-                alignment: pw.Alignment.bottomRight,
-                child: pw.Text(
-                  "Dicetak otomatis melalui Sistem Manajemen Keuangan Admin Ralinsa Bites", 
-                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)
-                ),
-              )
             ];
           },
         ),
@@ -338,9 +401,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
       final pdf = pw.Document();
 
-      final gayaHeader = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.white);
+      final gayaHeader = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9, color: PdfColors.white);
       final gayaData = pw.TextStyle(fontSize: 9, color: PdfColors.black);
-      final gayaTotal = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.black);
+      final gayaTotal = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9, color: PdfColors.black);
 
       pdf.addPage(
         pw.MultiPage(
@@ -350,36 +413,87 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             marginLeft: 25,
             marginRight: 25,
           ),
+          header: (pw.Context context) {
+            return pw.Column(
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text("RALINSA BITES", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF3E2723))),
+                        pw.Text("Manisnya Tak Terlupakan", style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic, color: PdfColors.grey600)),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text("LAPORAN GABUNGAN PENJUALAN", style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFFD4AF37))),
+                        pw.Text("Semua Transaksi Masuk", style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0xFF3E2723))),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 6),
+                pw.Divider(thickness: 1, color: PdfColor.fromInt(0xFF3E2723)),
+                pw.SizedBox(height: 12),
+              ],
+            );
+          },
+          footer: (pw.Context context) {
+            return pw.Container(
+              alignment: pw.Alignment.centerRight,
+              margin: const pw.EdgeInsets.only(top: 15),
+              padding: const pw.EdgeInsets.only(top: 5),
+              decoration: pw.BoxDecoration(
+                border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    "Dicetak otomatis melalui Sistem Manajemen Keuangan Admin Ralinsa Bites", 
+                    style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500)
+                  ),
+                  pw.Text(
+                    "Halaman ${context.pageNumber} dari ${context.pagesCount}",
+                    style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
+                  ),
+                ],
+              ),
+            );
+          },
           build: (pw.Context context) {
             return [
-              pw.Center(
-                child: pw.Text("LAPORAN GABUNGAN PENJUALAN TOKO RALINSA BITES", 
-                    style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              // Summary Cards Row
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  _pdfSummaryCard("Total Omset Gabungan", "Rp ${totalSemuaPendapatan.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}"),
+                  _pdfSummaryCard("Total Transaksi", "${semuaDataGabungan.length} Transaksi"),
+                  _pdfSummaryCard("Waktu Cetak", DateTime.now().toLocal().toString().substring(0, 16)),
+                ],
               ),
-              pw.Center(child: pw.Text("Manisnya Tak Terlupakan", style: const pw.TextStyle(fontSize: 10))),
-              pw.SizedBox(height: 5),
-              pw.Center(child: pw.Text("Periode: Akumulasi Semua Transaksi Masuk", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold))),
-              pw.SizedBox(height: 10),
-              pw.Divider(thickness: 1, color: PdfColors.grey400),
               pw.SizedBox(height: 15),
               
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
                 columnWidths: {
-                  0: const pw.FixedColumnWidth(25),
-                  1: const pw.FixedColumnWidth(60),
-                  2: const pw.FixedColumnWidth(80),
-                  3: const pw.FixedColumnWidth(130),
-                  4: const pw.FixedColumnWidth(30),
-                  5: const pw.FixedColumnWidth(60),
-                  6: const pw.FixedColumnWidth(85),
+                  0: const pw.FixedColumnWidth(25),  // No
+                  1: const pw.FixedColumnWidth(95),  // Tanggal
+                  2: const pw.FixedColumnWidth(85),  // Pelanggan
+                  3: const pw.FixedColumnWidth(150), // Menu
+                  4: const pw.FixedColumnWidth(30),  // Qty
+                  5: const pw.FixedColumnWidth(65),  // Metode
+                  6: const pw.FixedColumnWidth(95),  // Total
                 },
                 children: [
                   pw.TableRow(
                     decoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFF3E2723)),
                     children: [
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text("No", style: gayaHeader))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Hari/Tgl", style: gayaHeader)),
+                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Tanggal", style: gayaHeader)),
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Pelanggan", style: gayaHeader)),
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text("Menu Dipesan", style: gayaHeader)),
                       pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text("Qty", style: gayaHeader))),
@@ -405,12 +519,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       double totalHarga = double.tryParse(item['total'].toString()) ?? 0.0;
                       String formattedTotal = "Rp ${totalHarga.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
                       
-                      final warnaBaris = index % 2 == 0 ? PdfColors.grey100 : PdfColors.white;
+                      final warnaBaris = index % 2 == 0 ? PdfColor.fromInt(0xFFF9F9F9) : PdfColors.white;
 
                       return pw.TableRow(
                         children: [
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text("${index + 1}", style: gayaData))),
-                          pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['hari'] ?? item['tanggal'] ?? "-", style: gayaData)),
+                          pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['tanggal'] ?? item['hari'] ?? "-", style: gayaData)),
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['nama'] ?? "-", style: gayaData)),
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Text(item['menu'] ?? "-", style: gayaData)),
                           pw.Container(color: warnaBaris, padding: const pw.EdgeInsets.all(6), child: pw.Center(child: pw.Text(item['qty']?.toString() ?? "1", style: gayaData))),
@@ -422,18 +536,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
                   pw.TableRow(
                     children: [
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
-                      pw.Container(color: PdfColors.grey300, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
+                      pw.Container(color: PdfColors.grey200, child: pw.Padding(padding: const pw.EdgeInsets.all(8), child: pw.Text(""))),
                       pw.Container(
-                        color: PdfColors.grey300,
+                        color: PdfColors.grey200,
                         padding: const pw.EdgeInsets.all(8),
                         child: pw.Text("TOTAL GABUNGAN:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                       ),
                       pw.Container(
-                        color: PdfColors.grey300,
+                        color: PdfColors.grey200,
                         padding: const pw.EdgeInsets.all(8),
                         child: pw.Align(
                           alignment: pw.Alignment.centerRight,
@@ -447,15 +561,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 ],
               ),
-              
-              pw.SizedBox(height: 40),
-              pw.Align(
-                alignment: pw.Alignment.bottomRight,
-                child: pw.Text(
-                  "Dicetak otomatis melalui Sistem Manajemen Keuangan Admin Ralinsa Bites", 
-                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)
-                ),
-              )
             ];
           },
         ),
