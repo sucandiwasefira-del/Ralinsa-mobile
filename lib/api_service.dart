@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // URL Web App Google Apps Script Ralinsa Bites
-  static const String _gasUrl = "https://script.google.com/macros/s/AKfycbwCloPxQmrpHdMHwHGgG-qej7rPUFxM4ay81FRD8JD93hSTnXyabTKUtsyGRhX_AiSO/exec";
+  static const String _gasUrl = "https://script.google.com/macros/s/AKfycbyu09SrytSaAO3fQaR44DeIS3jJlrrk5I5rk1-Nzlvd1zRTxKEDjeeOqoMS36YQG11TYg/exec";
   // =======================================================
   // 1. FUNGSI LOGIN
   // =======================================================
@@ -190,6 +190,27 @@ class ApiService {
       }
     } catch (e) {
       return {'chart': List<double>.filled(12, 0.0), 'riwayat': []};
+    }
+  }
+
+  // =======================================================
+  // 8. FUNGSI AMBIL SEMUA DATA PENJUALAN (GABUNGAN)
+  // =======================================================
+  static Future<Map<String, dynamic>> ambilSemuaTransaksi() async {
+    try {
+      final uri = Uri.parse(_gasUrl).replace(queryParameters: {
+        'action': 'ambil_semua',
+      });
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {'chart': [0.0], 'riwayat': []};
+      }
+    } catch (e) {
+      return {'chart': [0.0], 'riwayat': []};
     }
   }
 }

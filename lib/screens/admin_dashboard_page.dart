@@ -255,7 +255,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       pw.Container(
                         color: PdfColors.grey300,
                         padding: const pw.EdgeInsets.all(8),
-                        child: pw.Text("TOTAL OMSAT:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                        child: pw.Text("TOTAL OMSET:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                       ),
                       pw.Container(
                         color: PdfColors.grey300,
@@ -300,15 +300,47 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   // 2. FUNGSI CETAK LAPORAN GABUNGAN (SEMUA TRANSAKSI)
   Future<void> _cetakLaporanGabunganPDF() async {
+    // Tampilkan loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37))),
+    );
+
+    Map<String, dynamic> responRaw;
     try {
+      responRaw = await ApiService.ambilSemuaTransaksi();
+      if (!mounted) return;
+      Navigator.pop(context); // Tutup loading dialog
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Tutup loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal mengambil data dari server: $e")),
+        );
+      }
+      return;
+    }
+
+    try {
+      List<dynamic> listMentah = responRaw['riwayat'] ?? [];
+      List<dynamic> semuaDataGabungan = [];
+      double totalSemuaPendapatan = 0;
+
+      for (var item in listMentah) {
+        String nama = item['nama']?.toString().trim() ?? "";
+        double totalHarga = double.tryParse(item['total'].toString()) ?? 0.0;
+        if (nama.isNotEmpty && nama != "-" && totalHarga > 0) {
+          semuaDataGabungan.add(item);
+          totalSemuaPendapatan += totalHarga;
+        }
+      }
+
       final pdf = pw.Document();
 
       final gayaHeader = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.white);
       final gayaData = pw.TextStyle(fontSize: 9, color: PdfColors.black);
       final gayaTotal = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.black);
-
-      List<dynamic> semuaDataGabungan = _riwayatPesanan; 
-      double totalSemuaPendapatan = _totalPendapatan;
 
       pdf.addPage(
         pw.MultiPage(
