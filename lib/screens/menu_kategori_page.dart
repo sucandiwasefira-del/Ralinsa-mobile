@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 
 class MenuKategoriPage extends StatelessWidget {
   final List<Map<String, dynamic>> semuaMenu;
@@ -16,6 +17,39 @@ class MenuKategoriPage extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: const Color(0xFF3E2723),   
           title: const Text("Daftar Menu", style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Color(0xFFD4AF37)),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Logout"),
+                      content: const Text("Apakah anda ingin kluar dari aplikasi toko ralinsa?"),
+                      actions: [
+                        TextButton(
+                          child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        TextButton(
+                          child: const Text("Keluar", style: TextStyle(color: Colors.red)),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                              (route) => false,
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
           bottom: const TabBar(labelColor: Color(0xFFD4AF37), unselectedLabelColor: Colors.white54, tabs: [Tab(text: "KUE KERING"), Tab(text: "KUE BASAH")]),
         ),
         body: Column(
