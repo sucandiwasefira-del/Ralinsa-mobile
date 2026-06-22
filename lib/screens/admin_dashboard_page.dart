@@ -3,7 +3,7 @@ import '../api_service.dart';
 import 'login_page.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:universal_html/html.dart' as html; 
+import 'package:printing/printing.dart'; 
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -349,12 +349,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       );
 
-      final bytes = await pdf.save();
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      
-      html.window.open(url, '_blank');
-      html.Url.revokeObjectUrl(url);
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'laporan_penjualan_${_tipeFilter.toLowerCase()}',
+      );
 
     } catch (e) {
       debugPrint("Gagal mencetak PDF Detail Keuangan: $e");
@@ -566,12 +564,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       );
 
-      final bytes = await pdf.save();
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      
-      html.window.open(url, '_blank');
-      html.Url.revokeObjectUrl(url);
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'laporan_gabungan_penjualan',
+      );
 
     } catch (e) {
       debugPrint("Gagal mencetak PDF Gabungan: $e");
